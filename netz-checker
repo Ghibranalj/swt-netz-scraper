@@ -1,5 +1,6 @@
 #! /bin/env python3
 
+from re import T
 import requests
 import mechanize
 from bs4 import BeautifulSoup
@@ -29,7 +30,9 @@ def scrape(username, password):
     browser.form['_password'] = password
     browser.submit()
 
-    # sessionid = cookies._cookies['netz.studiwerk.de']['/']['PHPSESSID'].value
+    # for caching purposes
+    # sessionid = cookies._cookies['netz.studiwerk.de']['/']['sessionid']
+    # expiryTime  = cookies._cookies['netz.studiwerk.de']['/']['expires']
 
     browser.open('https://netz.studiwerk.de/')
 
@@ -38,10 +41,15 @@ def scrape(username, password):
     soup = BeautifulSoup(content, 'html.parser')
     trafficLimit = soup.find('strong', {'id': 'trafficlimit'}).text.split(' ')[0]
     totalTraffic = soup.find('strong', {'id': 'totaltraffic'}).text.split(' ')[0]
+    
+    # edge case for 0 byte
+    if totalTraffic== '0,00':
+        totalTraffic = '0'
+
     used = format_bytes(int(totalTraffic))
     limit = format_bytes(int(trafficLimit))
 
-    return f"{used} / {limit}"
+    return f" {used} / {limit}"
 
 if __name__ == '__main__':
     username = sys.argv[1]
